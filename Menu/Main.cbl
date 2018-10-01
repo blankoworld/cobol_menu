@@ -53,6 +53,14 @@
        77 COULEURFOND PIC 99 VALUE 15.
        77 COULEURTEXTE PIC 99 VALUE 0.
 
+       77 CNXDB String.
+           exec sql
+               include sqlca
+           end-exec.
+           exec sql
+               include sqlda
+           end-exec.
+
        screen section.
       *****************
       * Menu Principal
@@ -86,6 +94,13 @@
            PERFORM MENU-FIN.
 
        MENU-INIT.
+      * Connexion à la base de données
+           MOVE "Trusted_Connection=yes;Database=CIGALES;server=SRF-EN2-07\SQLEXPRESS;factory=System.Data.SqlClient;" TO CNXDB.
+           exec sql
+               connect using :CNXDB
+           end-exec.
+
+      * Utilisation d'une autre valeur que 0 à 5 par défaut
            MOVE 6 TO OPTION.
            ACCEPT DATE-SYSTEME FROM date.
 
