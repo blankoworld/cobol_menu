@@ -100,6 +100,11 @@
                connect using :CNXDB
            end-exec.
 
+      * Choix de l'option Autocommit ** NE JAMAIS FAIRE IRL **************
+           exec sql
+               set autocommit on
+           end-exec.
+
       * Utilisation d'une autre valeur que 0 à 5 par défaut
            MOVE 6 TO OPTION.
            ACCEPT DATE-SYSTEME FROM date.
