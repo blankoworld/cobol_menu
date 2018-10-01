@@ -8,6 +8,7 @@
     <RootNamespace>Menu</RootNamespace>
     <PreserveCase>True</PreserveCase>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <SQLDirectives>SQL(DBMAN=ADO) SQL(DB=SRF-EN2-07\SQLEXPRESS) SQL(TARGETDB=MSSQLSERVER) SQL(BEHAVIOR=ANSI)</SQLDirectives>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <OutputPath>.\bin\Debug\</OutputPath>
