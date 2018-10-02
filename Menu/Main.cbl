@@ -171,8 +171,8 @@
                DernierChamp
            END-UNSTRING.
 
-      * Traitement du solde : la zone est cadrée à gauche. Si elle 
-           DISPLAY Prenom Nom.
+      * Traitement du solde : la zone est cadrée à gauche. Si elle est négative
+      * alors ça fait Credit NULL, et Debit. Sinon Credit rempli.
            UNSTRING DernierChamp delimited " " or "-" into
                Credit of COMPTE
                Debit of COMPTE
