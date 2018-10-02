@@ -42,7 +42,12 @@
            10 Prenom     SQL CHAR-VARYING(50).
            10 Nom        SQL CHAR-VARYING(50).
 
+       01 BQ.
+           10 CodeBanque PIC X(5).
+           10 Enseigne   PIC X(151).
+
        77 OPTION PIC 9 VALUE 9.
+       77 OPTION-BQ PIC X VALUE "M".
        77 FIN-FICHIER PIC 9.
        77 LIGNE PIC X(79) VALUE ALL "-".
 
@@ -85,6 +90,19 @@
            10 line 12 Col 4 VALUE "- 5 - Gestion des clients ......................................... : ".
            10 line 14 Col 4 VALUE "- 0 - Retour au menu appelant ..................................... : ".
 
+      *****************
+      * Menu Banque
+      *****************
+       01 MenuBanque Background-color COULEURFOND
+           Foreground-color COULEURTEXTE.
+           10 line 1 Col 1  BLANK SCREEN.
+           10 line 1 Col 1  VALUE " Page [S]uivante - Retour au [M]enu :"
+               Background-color COULEURTEXTE Foreground-color COULEURFOND.
+           10 line 3 Col 31 VALUE "LISTE DES BANQUES".
+           10 line 5 Col 1  VALUE " Code  Nom de la banque"
+               Background-color COULEURTEXTE Foreground-color COULEURFOND
+               SIZE 80.
+
        procedure division.
 
       ******************
@@ -119,7 +137,7 @@
            ACCEPT OPTION line 5 Col 79.
            EVALUATE OPTION
                WHEN 1 PERFORM IMPORT-FICHIER
-               WHEN 2 continue
+               WHEN 2 PERFORM LISTE-BQ
                WHEN 3 continue
                WHEN 4 continue
                WHEN 5 CONTINUE
@@ -222,5 +240,38 @@
                    ,:Compte.Credit
                    ,:Client.CodeClient)
            end-exec.
+
+      *************************************************************************
+      * Affiche la liste des banques triées par ordre alphabétique
+      *************************************************************************
+       LISTE-BQ.
+           PERFORM LISTE-BQ-INIT.
+           PERFORM LISTE-BQ-TRT UNTIL (SQLCODE <> 100) OR (SQLCODE <> 101).
+           PERFORM LISTE-BQ-FIN.
+
+       LISTE-BQ-INIT.
+      * On initialise le curseur.
+           EXEC sql
+             DECLARE CURSEUR-BQ CURSOR FOR
+               SELECT [CodeBanque]
+               ,[Enseigne]
+               FROM BANQUE ORDER BY [Enseigne]
+           END-EXEC.
+      * Puis on l'ouvre
+           EXEC sql
+             OPEN CURSEUR-BQ
+           END-EXEC.
+
+       LISTE-BQ-TRT.
+      * On récupère le résultat du curseur.
+           EXEC sql
+             FETCH CURSEUR-BQ INTO :BQ.CodeBanque, :BQ.Enseigne
+           END-EXEC.
+
+       LISTE-BQ-FIN.
+      * On ferme le curseur.
+           EXEC sql
+             CLOSE CURSEUR-BQ
+           END-EXEC.
 
        end program Main.
