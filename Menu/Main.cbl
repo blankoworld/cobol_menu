@@ -28,18 +28,19 @@
 
       * Structure pour accueillir une partie de la ligne du fichier compte
        01 COMPTE.
-           10 CodeBanque PIC X(5).
-           10 CodeGuichet PIC X(5).
-           10 RacineCompte PIC X(9).
-           10 TypeCompte PIC XX.
-           10 CleRib PIC 99.
-           10 Debit PIC 9(10).
-           10 Credit PIC 9(10).
+           10 CodeBanque   SQL CHAR(5).
+           10 CodeGuichet  SQL CHAR(5).
+           10 RacineCompte SQL CHAR(9).
+           10 TypeCompte   SQL CHAR(2).
+           10 CleRib       SQL CHAR(2).
+           10 Debit        PIC 9(12)V99.
+           10 Credit       PIC 9(12)V99.
 
        01 CLIENT.
-           10 Intitule PIC X(10).
-           10 Prenom PIC X(50).
-           10 Nom PIC X(50).
+           10 CodeClient PIC X(36).
+           10 Intitule   SQL CHAR-VARYING(10).
+           10 Prenom     SQL CHAR-VARYING(50).
+           10 Nom        SQL CHAR-VARYING(50).
 
        77 OPTION PIC 9 VALUE 9.
        77 FIN-FICHIER PIC 9.
@@ -60,6 +61,7 @@
            exec sql
                include sqlda
            end-exec.
+      * SQLCA et SQLDA sont des blocs de données en instructions pour COBOL.
 
        screen section.
       *****************
@@ -96,6 +98,7 @@
        MENU-INIT.
       * Connexion à la base de données
            MOVE "Trusted_Connection=yes;Database=CIGALES;server=SRF-EN2-07\SQLEXPRESS;factory=System.Data.SqlClient;" TO CNXDB.
+      * une seule instruction SQL à la fois.
            exec sql
                connect using :CNXDB
            end-exec.
@@ -130,6 +133,7 @@
       *************************************************
        IMPORT-FICHIER.
            PERFORM IMPORT-FICHIER-INIT.
+
            PERFORM IMPORT-FICHIER-TRAITEMENT UNTIL FIN-FICHIER = 1.
            PERFORM IMPORT-FICHIER-FIN.
 
@@ -177,5 +181,46 @@
       * On divise les valeurs trouvées par 100
            Divide 100 into Debit of Compte.
            Divide 100 into Credit of Compte.
+
+      * Création d'un nouvel ID et envoie dans le CodeClient du présent prog.
+           exec sql
+               SELECT NEWID() into :Client.CodeClient
+           end-exec.
+
+      * On crée un nouveau client
+           exec sql
+               INSERT INTO CLIENT
+                   ([CodeClient]
+                   ,[Intitule]
+                   ,[Prenom]
+                   ,[Nom])
+               VALUES
+                   (:Client.CodeClient
+                   ,:Client.Intitule
+                   ,:Client.Prenom
+                   ,:Client.Nom)
+           end-exec.
+
+      * On crée le compte de ce client
+           exec sql
+               INSERT INTO COMPTE
+                   ([CodeBanque]
+                   ,[CodeGuichet]
+                   ,[RacineCompte]
+                   ,[TypeCompte]
+                   ,[CleRib]
+                   ,[SoldeDebiteur]
+                   ,[SoldeCrediteur]
+                   ,[CodeClient])
+               VALUES
+                   (:Compte.CodeBanque
+                   ,:Compte.CodeGuichet
+                   ,:Compte.RacineCompte
+                   ,:Compte.TypeCompte
+                   ,:Compte.CleRib
+                   ,:Compte.Debit
+                   ,:Compte.Credit
+                   ,:Client.CodeClient)
+           end-exec.
 
        end program Main.
