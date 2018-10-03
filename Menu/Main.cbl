@@ -54,6 +54,11 @@
            10 TypeCompte   SQL CHAR(2).
            10 Solde        PIC 9(11)V99.
 
+       01 RIB.
+           10 Banque PIC 9(5).
+           10 Guichet PIC 9(5).
+           10 Compte PIC 9(11).
+
        77 OPTION PIC 9 VALUE 9.
        77 OPTION-BQ PIC X VALUE "S".
        77 FIN-FICHIER PIC 9.
@@ -64,6 +69,17 @@
 
        77 COULEURFOND PIC 99 VALUE 15.
        77 COULEURTEXTE PIC 99 VALUE 0.
+
+      * Elements temporaires pour les calculs
+       77 PARTIE1 PIC 9(7).
+       77 PARTIE2 PIC 9(7).
+       77 PARTIE3 PIC 9(12).
+       77 SOUS-TOTAL PIC 9(21).
+       77 RESTE PIC 99.
+       77 QUOTIENT PIC 9(20).
+       77 TOTAL PIC 99.
+
+       77 REPONSE PIC 9.
 
        77 CNXDB String.
            exec sql
@@ -183,7 +199,7 @@
                WHEN 1 PERFORM IMPORT-FICHIER
                WHEN 2 PERFORM LISTE-BQ
                WHEN 3 PERFORM LISTE-CPT
-               WHEN 4 continue
+               WHEN 4 PERFORM VERIF-CPT
                WHEN 5 CONTINUE
            END-EVALUATE.
 
@@ -312,7 +328,9 @@
        LISTE-BQ-TRT.
       * On récupère le résultat du curseur.
            EXEC sql
-             FETCH CURSEUR-BQ INTO :BQ.CodeBanque, :BQ.Enseigne
+             FETCH CURSEUR-BQ INTO
+               :BQ.CodeBanque,
+               :BQ.Enseigne
            END-EXEC.
            PERFORM LISTE-BQ-AFFICHAGE.
 
@@ -399,5 +417,63 @@
            IF SQLCODE = 100 OR SQLCODE = 101
                MOVE 1 TO ListeEOF
            END-IF.
+
+       VERIF-CPT.
+           PERFORM verif-cpt-init.
+           perform verif-cpt-trt until SQLCODE = 100 or SQLCODE = 101.
+           perform verif-cpt-fin.
+
+       verif-cpt-init.
+      * On initialise le curseur de lecture des comptes
+           exec sql
+             declare curseur-rib cursor for
+               SELECT [CodeBanque]
+                   ,[CodeGuichet]
+                   ,[NumCompte]
+               FROM COMPTE
+           end-exec.
+       
+           exec sql
+             open curseur-rib
+           end-exec.
+
+           MOVE 0 TO SOUS-TOTAL.
+
+       verif-cpt-trt.
+           exec sql
+             fetch curseur-rib into
+               :RIB.Banque,
+               :RIB.Guichet,
+               :RIB.Compte
+           end-exec.
+      * Formule de vérification d'une clé RIB : 
+      * 97 - MODULO(89 * CodeBanque + 15 * CodeGuichet + 3 * NumCompte ; 97)
+      * partie1 = 89 * CodeBanque
+      * partie2 = 15 * CodeGuichet
+      * partie3 = 3 * NumCompte
+      * sous-total = partie1 + partie2 + partie3
+      * reste = sous-total / 97
+      * total = 97 - reste
+           multiply
+             Banque of RIB by 89 GIVING PARTIE1.
+           multiply
+             Guichet of RIB by 15 GIVING PARTIE2.
+           multiply
+             Compte of RIB by 3 GIVING PARTIE3.
+           ADD
+             PARTIE1
+             PARTIE2
+           TO PARTIE3
+           GIVING SOUS-TOTAL.
+           DIVIDE 97 INTO SOUS-TOTAL GIVING QUOTIENT REMAINDER RESTE.
+           SUBTRACT RESTE FROM 97 GIVING TOTAL.
+
+           DISPLAY 1 BLANK SCREEN.
+           ACCEPT REPONSE.
+
+       verif-cpt-fin.
+           exec sql
+               close curseur-rib
+           end-exec.
 
        end program Main.
