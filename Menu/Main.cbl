@@ -47,10 +47,11 @@
            10 Enseigne   PIC X(151).
 
        77 OPTION PIC 9 VALUE 9.
-       77 OPTION-BQ PIC X VALUE "M".
+       77 OPTION-BQ PIC X VALUE "S".
        77 FIN-FICHIER PIC 9.
 
        77 DernierChamp PIC X(12).
+       77 BQ-NumeroLigne PIC 99.
 
        77 COULEURFOND PIC 99 VALUE 15.
        77 COULEURTEXTE PIC 99 VALUE 0.
@@ -256,6 +257,10 @@
            EXEC sql
              OPEN CURSEUR-BQ
            END-EXEC.
+      * On initialise le numéro de ligne où afficher la banque
+           MOVE 5 TO BQ-NumeroLigne.
+      * On affiche le début de l'écran
+           DISPLAY MenuBanque.
 
        LISTE-BQ-TRT.
       * On récupère le résultat du curseur.
@@ -271,6 +276,20 @@
            END-EXEC.
 
        LISTE-BQ-AFFICHAGE.
-           continue.
+      * On affiche les lignes de banque entre la ligne 6 et 23.
+      * On incrémente donc la variable de la ligne de banque.
+           ADD 1 TO BQ-NumeroLigne.
+           IF BQ-NumeroLigne > 23
+               ACCEPT OPTION-BQ LINE 1 Col 39
+               IF OPTION-BQ = "M" OR OPTION-BQ = "m"
+                   MOVE 101 TO SQLCODE
+               ELSE
+                   MOVE 5 TO BQ-NumeroLigne
+                   DISPLAY MenuBanque
+               END-IF
+           ELSE
+               DISPLAY CodeBanque OF BQ LINE BQ-NumeroLigne Col 1
+               DISPLAY Enseigne OF BQ LINE BQ-NumeroLigne Col 7
+           END-IF.
 
        end program Main.
