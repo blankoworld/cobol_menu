@@ -100,6 +100,10 @@
                Background-color COULEURTEXTE Foreground-color COULEURFOND
                SIZE 80.
 
+       01 MenuBanqueLigne.
+           10 line BQ-Numeroligne col 1 from CodeBanque of BQ.
+           10 line BQ-Numeroligne col 7 from Enseigne of BQ.
+
        procedure division.
 
       ******************
@@ -279,17 +283,15 @@
       * On affiche les lignes de banque entre la ligne 6 et 23.
       * On incrémente donc la variable de la ligne de banque.
            ADD 1 TO BQ-NumeroLigne.
-           IF BQ-NumeroLigne > 23
+           DISPLAY MenuBanqueLigne.
+
+           IF BQ-NumeroLigne = 23
+               MOVE "S" TO OPTION-BQ
+               MOVE 5 TO BQ-NumeroLigne
                ACCEPT OPTION-BQ LINE 1 Col 39
                IF OPTION-BQ = "M" OR OPTION-BQ = "m"
                    MOVE 101 TO SQLCODE
-               ELSE
-                   MOVE 5 TO BQ-NumeroLigne
-                   DISPLAY MenuBanque
                END-IF
-           ELSE
-               DISPLAY CodeBanque OF BQ LINE BQ-NumeroLigne Col 1
-               DISPLAY Enseigne OF BQ LINE BQ-NumeroLigne Col 7
            END-IF.
 
        end program Main.
