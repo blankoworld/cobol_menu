@@ -46,12 +46,21 @@
            10 CodeBanque PIC X(5).
            10 Enseigne   PIC X(151).
 
+       01 CPT.
+           10 NomComplet   SQL CHAR-VARYING(255).
+           10 EnseigneBQ   SQL CHAR-VARYING(255).
+           10 CodeGuichet  SQL CHAR(5).
+           10 RacineCompte SQL CHAR(9).
+           10 TypeCompte   SQL CHAR(2).
+           10 Solde        PIC 9(11)V99.
+
        77 OPTION PIC 9 VALUE 9.
        77 OPTION-BQ PIC X VALUE "S".
        77 FIN-FICHIER PIC 9.
 
        77 DernierChamp PIC X(12).
-       77 BQ-NumeroLigne PIC 99.
+       77 Numeroligne PIC 99.
+       77 ListeEOF PIC 9 VALUE 0.
 
        77 COULEURFOND PIC 99 VALUE 15.
        77 COULEURTEXTE PIC 99 VALUE 0.
@@ -99,14 +108,44 @@
                SIZE 80.
 
        01 MenuBanqueLigne.
-           10 line BQ-Numeroligne col 1 from CodeBanque of BQ.
-           10 line BQ-Numeroligne col 7 from Enseigne of BQ.
+           10 line Numeroligne col 1 from CodeBanque of BQ.
+           10 line Numeroligne col 7 from Enseigne of BQ.
 
        01 MenuBanqueQuestion.
            10 line 1 Col 1 VALUE " Page [S]uivante - Retour au [M]enu :"
                Background-color COULEURTEXTE Foreground-color COULEURFOND.
            10 line 1 Col 39 FROM OPTION-BQ
                Background-color COULEURTEXTE Foreground-color COULEURFOND.
+
+      ********************************
+      * Ecran de la liste des comptes
+      ********************************
+       01 MenuCompte Background-color COULEURFOND
+           Foreground-color COULEURTEXTE.
+           10 line 1 Col 1  BLANK SCREEN.
+           10 line 3 Col 31 VALUE "LISTE DES COMPTES".
+           10 line 5 Col 1  PIC X(80) VALUE ALL SPACE
+               Background-color COULEURTEXTE Foreground-color COULEURFOND.
+           10 line 5 Col 1  VALUE "GUICH."
+               Background-color COULEURTEXTE Foreground-color COULEURFOND.
+           10 line 5 Col 8  VALUE "Compte"
+               Background-color COULEURTEXTE Foreground-color COULEURFOND.
+           10 line 5 Col 17 VALUE "TC"
+               Background-color COULEURTEXTE Foreground-color COULEURFOND.
+           10 line 5 Col 21 VALUE "Nom complet"
+               Background-color COULEURTEXTE Foreground-color COULEURFOND.
+           10 line 5 Col 43 VALUE "Banque"
+               Background-color COULEURTEXTE Foreground-color COULEURFOND.
+           10 line 5 Col 73 VALUE "Solde"
+               Background-color COULEURTEXTE Foreground-color COULEURFOND.
+
+       01 MenuCptLigne.
+           10 line Numeroligne col 1 FROM CodeGuichet of CPT PIC X(5).
+           10 line Numeroligne col 7 FROM RacineCompte of CPT PIC X(9).
+           10 line Numeroligne col 17 FROM TypeCompte of CPT PIC X(2).
+           10 line Numeroligne col 20 FROM NomComplet of CPT PIC X(23).
+           10 line NumeroLigne col 42 FROM EnseigneBQ of CPT PIC X(25).
+           10 line NumeroLigne col 70 FROM Solde of CPT PIC Z(6)9V,99.
 
        procedure division.
 
@@ -143,7 +182,7 @@
            EVALUATE OPTION
                WHEN 1 PERFORM IMPORT-FICHIER
                WHEN 2 PERFORM LISTE-BQ
-               WHEN 3 continue
+               WHEN 3 PERFORM LISTE-CPT
                WHEN 4 continue
                WHEN 5 CONTINUE
            END-EVALUATE.
@@ -266,7 +305,7 @@
              OPEN CURSEUR-BQ
            END-EXEC.
       * On initialise le numéro de ligne où afficher la banque
-           MOVE 5 TO BQ-NumeroLigne.
+           MOVE 5 TO Numeroligne.
       * On affiche le début de l'écran
            DISPLAY MenuBanque.
 
@@ -286,17 +325,79 @@
        LISTE-BQ-AFFICHAGE.
       * On affiche les lignes de banque entre la ligne 6 et 23.
       * On incrémente donc la variable de la ligne de banque.
-           ADD 1 TO BQ-NumeroLigne.
+           ADD 1 TO Numeroligne.
            DISPLAY MenuBanqueLigne.
 
-           IF BQ-NumeroLigne = 23
+           IF Numeroligne = 23
                MOVE "S" TO OPTION-BQ
-               MOVE 5 TO BQ-NumeroLigne
+               MOVE 5 TO Numeroligne
                DISPLAY MenuBanqueQuestion
                ACCEPT OPTION-BQ LINE 1 Col 39
                IF OPTION-BQ = "M" OR OPTION-BQ = "m"
                    MOVE 101 TO SQLCODE
                END-IF
+           END-IF.
+
+      *************************************************************************
+      * OPTION 3 : LISTE DES COMPTES
+      *************************************************************************
+       LISTE-CPT.
+           PERFORM Liste-cpt-init.
+           perform liste-cpt-trt until ListeEOF = 1.
+           perform liste-cpt-fin.
+
+       liste-cpt-init.
+      * On initialise un curseur, on l'ouvre, puis on affiche le début du menu.
+           EXEC sql
+             declare curseur-cpt cursor for
+               SELECT [PrenomNom]
+                   ,[Enseigne]
+                   ,[CodeGuichet]
+                   ,[RacineCompte]
+                   ,[TypeCompte]
+                   ,[Solde]
+               FROM VueCompte ORDER BY CodeGuichet, RacineCompte, TypeCompte
+           END-EXEC.
+           EXEC sql
+             open curseur-cpt
+           END-EXEC.
+      * initialisation des variables nécessaires puis affichage de l'entête
+      * du menu
+           MOVE 0 TO ListeEOF.
+           MOVE 5 TO Numeroligne.
+           DISPLAY MenuCompte.
+
+       liste-cpt-trt.
+      * récupération progressive de chaque élément de la requête de la vue.
+           exec sql
+             fetch curseur-cpt into
+               :CPT.NomComplet,
+               :CPT.EnseigneBQ,
+               :CPT.CodeGuichet,
+               :CPT.RacineCompte,
+               :CPT.TypeCompte,
+               :CPT.Solde
+           end-exec.
+           PERFORM LISTE-CPT-AFFICHAGE.
+
+       liste-cpt-fin.
+      * Ne jamais oublier de fermer le curseur
+           exec sql
+               close curseur-cpt
+           end-exec.
+
+       LISTE-CPT-AFFICHAGE.
+           ADD 1 TO NumeroLigne.
+           DISPLAY MenuCptLigne.
+
+           IF Numeroligne = 23
+               MOVE 5 TO Numeroligne
+               ACCEPT OPTION-BQ LINE 1 Col 39
+           END-IF.
+
+      * On interrompt l'affichage si nous sommes arrivés à la fin du curseur.
+           IF SQLCODE = 100 OR SQLCODE = 101
+               MOVE 1 TO ListeEOF
            END-IF.
 
        end program Main.
