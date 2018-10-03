@@ -246,7 +246,7 @@
       *************************************************************************
        LISTE-BQ.
            PERFORM LISTE-BQ-INIT.
-           PERFORM LISTE-BQ-TRT UNTIL (SQLCODE <> 100) OR (SQLCODE <> 101).
+           PERFORM LISTE-BQ-TRT UNTIL (SQLCODE = 100) OR (SQLCODE = 101).
            PERFORM LISTE-BQ-FIN.
 
        LISTE-BQ-INIT.
@@ -267,11 +267,15 @@
            EXEC sql
              FETCH CURSEUR-BQ INTO :BQ.CodeBanque, :BQ.Enseigne
            END-EXEC.
+           PERFORM LISTE-BQ-AFFICHAGE.
 
        LISTE-BQ-FIN.
       * On ferme le curseur.
            EXEC sql
              CLOSE CURSEUR-BQ
            END-EXEC.
+
+       LISTE-BQ-AFFICHAGE.
+           continue.
 
        end program Main.
