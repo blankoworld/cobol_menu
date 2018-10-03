@@ -49,12 +49,8 @@
        77 OPTION PIC 9 VALUE 9.
        77 OPTION-BQ PIC X VALUE "M".
        77 FIN-FICHIER PIC 9.
-       77 LIGNE PIC X(79) VALUE ALL "-".
 
        77 DernierChamp PIC X(12).
-       77 Solde PIC ZZZZZZ9.
-
-       77 NAWAK pic 9.
 
        77 COULEURFOND PIC 99 VALUE 15.
        77 COULEURTEXTE PIC 99 VALUE 0.
@@ -171,7 +167,6 @@
        IMPORT-FICHIER-FIN.
       * fermeture du fichier
            CLOSE FICHIER-COMPTE.
-           accept NAWAK.
 
       ************************************
       * Traitement d'une ligne du fichier
