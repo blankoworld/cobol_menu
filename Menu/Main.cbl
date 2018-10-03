@@ -93,8 +93,6 @@
        01 MenuBanque Background-color COULEURFOND
            Foreground-color COULEURTEXTE.
            10 line 1 Col 1  BLANK SCREEN.
-           10 line 1 Col 1  VALUE " Page [S]uivante - Retour au [M]enu :"
-               Background-color COULEURTEXTE Foreground-color COULEURFOND.
            10 line 3 Col 31 VALUE "LISTE DES BANQUES".
            10 line 5 Col 1  VALUE " Code  Nom de la banque"
                Background-color COULEURTEXTE Foreground-color COULEURFOND
@@ -103,6 +101,12 @@
        01 MenuBanqueLigne.
            10 line BQ-Numeroligne col 1 from CodeBanque of BQ.
            10 line BQ-Numeroligne col 7 from Enseigne of BQ.
+
+       01 MenuBanqueQuestion.
+           10 line 1 Col 1 VALUE " Page [S]uivante - Retour au [M]enu :"
+               Background-color COULEURTEXTE Foreground-color COULEURFOND.
+           10 line 1 Col 39 FROM OPTION-BQ
+               Background-color COULEURTEXTE Foreground-color COULEURFOND.
 
        procedure division.
 
@@ -288,6 +292,7 @@
            IF BQ-NumeroLigne = 23
                MOVE "S" TO OPTION-BQ
                MOVE 5 TO BQ-NumeroLigne
+               DISPLAY MenuBanqueQuestion
                ACCEPT OPTION-BQ LINE 1 Col 39
                IF OPTION-BQ = "M" OR OPTION-BQ = "m"
                    MOVE 101 TO SQLCODE
